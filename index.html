@@ -135,12 +135,10 @@ td.cs-count{text-align:center;color:var(--gray-dark);}
 .tbtn{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:9px 28px;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit;color:var(--gray-dark);transition:all .15s;}
 .tbtn.active{background:var(--orange);color:#fff;border-color:var(--orange);}
 /* Gavia screen */
-#gaviaScreen .gavia-search{width:100%;max-width:340px;margin-bottom:16px;}
-.btn-paid{background:#166534;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;font-family:inherit;}
-.btn-paid:hover{background:#14532d;}
+#gaviaScreen .gavia-search{width:100%;max-width:260px;margin-bottom:0;}
+#gaviaClientFilter{max-width:220px;}
 .btn-excel-unpaid{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;font-family:inherit;color:var(--gray-dark);}
 .btn-excel-unpaid:hover{border-color:var(--orange);color:var(--orange);}
-tr.paid-row td{text-decoration:line-through;opacity:.4;}
 /* ── Mobile ── */
 @media(max-width:700px){
   /* Header */
@@ -357,23 +355,25 @@ tr.paid-row td{text-decoration:line-through;opacity:.4;}
       <div class="table-toolbar">
         <h3>חשבוניות לגבייה</h3>
         <div class="filters">
-          <input type="text" id="gaviaSearch" class="gavia-search" placeholder="חיפוש לפי תיאור פרויקט..." oninput="renderUnpaid()"/>
+          <select id="gaviaClientFilter" class="filter-sel" onchange="renderUnpaid()">
+            <option value="">כל הלקוחות</option>
+          </select>
+          <input type="text" id="gaviaSearch" class="gavia-search" placeholder="חיפוש חופשי..." oninput="renderUnpaid()"/>
         </div>
       </div>
       <div class="tbl-wrap">
         <table id="gaviaTable">
           <thead><tr>
             <th>תאריך</th>
+            <th>לקוח</th>
             <th>תיאור פרויקט</th>
             <th>מספר מסמך</th>
             <th style="text-align:left;">סכום ₪</th>
-            <th>פעולה</th>
           </tr></thead>
           <tbody id="gaviaTbody"></tbody>
           <tfoot><tr>
-            <td colspan="3" style="font-weight:700;border-top:2px solid var(--border);padding:9px 8px;">סה"כ נותר</td>
+            <td colspan="4" style="font-weight:700;border-top:2px solid var(--border);padding:9px 8px;">סה"כ נותר</td>
             <td id="gaviaFooterTotal" style="font-weight:700;color:var(--orange);text-align:left;border-top:2px solid var(--border);padding:9px 8px;"></td>
-            <td style="border-top:2px solid var(--border);"></td>
           </tr></tfoot>
         </table>
       </div>
@@ -672,6 +672,7 @@ const LS_ADD_KEY = "ta_additions_v1";
 
 // Clear all old storage keys to prevent stale data
 ["ta_data_v1","ta_data_v2","ta_data_v3","ta_data_v4"].forEach(k => localStorage.removeItem(k));
+localStorage.removeItem('ta_unpaid_v1');
 
 function lsSaveAdditions(recs) {
   try { localStorage.setItem(LS_ADD_KEY, JSON.stringify(recs)); } catch(e){}
@@ -1007,7 +1008,7 @@ function mergeAdditions() {
 // ── Gavia (unpaid invoices) ──────────────────────────────────────────────────
 const LS_UNPAID_KEY = "ta_unpaid_v1";
 
-const DEFAULT_UNPAID = [{"docNum":"3157029","client":"כלא מגידו","date":"31/03/2026","amount":327671.62},{"docNum":"3157234","client":"כלא מגידו","date":"07/05/2026","amount":305203.55},{"docNum":"3157241","client":"כלא מגידו","date":"17/05/2026","amount":109.37},{"docNum":"3157340","client":"כלא מגידו","date":"19/05/2026","amount":1678494.1},{"docNum":"3157342","client":"כלא מגידו","date":"20/05/2026","amount":1074059.53},{"docNum":"3157365","client":"ניהול ופיקוח עופר - בינוי אגפים חדשים -","date":"31/05/2026","amount":151627.42},{"docNum":"3157478","client":"כלא מגידו","date":"31/05/2026","amount":13998.8},{"docNum":"3157499","client":"כלא מגידו","date":"31/05/2026","amount":145211.86},{"docNum":"3157381","client":"כלא מגידו","date":"09/06/2026","amount":557413.12},{"docNum":"3157500","client":"כלא מגידו","date":"18/06/2026","amount":7341.96},{"docNum":"3157501","client":"כלא מגידו","date":"18/06/2026","amount":232.64},{"docNum":"3157502","client":"כלא מגידו","date":"21/06/2026","amount":109.83},{"docNum":"3154018","client":"פבל","date":"31/12/2025","amount":12829.9},{"docNum":"3154027","client":"פרויקטים ח\"א קריה","date":"31/12/2025","amount":6557.5},{"docNum":"3154028","client":"מתכננים - מרחב בינוי 565 (4441220475)","date":"31/12/2025","amount":119310.65},{"docNum":"3154985","client":"פבל","date":"31/01/2026","amount":11315.87},{"docNum":"3154991","client":"פרויקטים ח\"א קריה","date":"31/01/2026","amount":26728.42},{"docNum":"3157487","client":"קה\"מ QA","date":"31/01/2026","amount":14419.13},{"docNum":"3156997","client":"קה\"מ QA","date":"26/02/2026","amount":192571.54},{"docNum":"3157003","client":"פרויקטים ח\"א קריה","date":"26/02/2026","amount":17267.55},{"docNum":"3157011","client":"קריית המודיעין","date":"26/02/2026","amount":54540.04},{"docNum":"3157488","client":"קה\"מ QA","date":"26/02/2026","amount":11101.71},{"docNum":"3157040","client":"בא\"ח 900 -","date":"31/03/2026","amount":29608.44},{"docNum":"3157041","client":"קה\"מ QA","date":"31/03/2026","amount":210209.72},{"docNum":"3157054","client":"קריית המודיעין","date":"31/03/2026","amount":57298.61},{"docNum":"3157101","client":"קה\"מ QA","date":"31/03/2026","amount":40465.36},{"docNum":"3155995","client":"פיילוט אגירת אנרגיה","date":"30/04/2026","amount":22346.62},{"docNum":"3157223","client":"פבל","date":"30/04/2026","amount":8256.11},{"docNum":"3157225","client":"מתאמים- מרחב בינוי 565 (4441220145)","date":"30/04/2026","amount":9532.51},{"docNum":"3157227","client":"קריית המודיעין","date":"30/04/2026","amount":40165.68},{"docNum":"3157228","client":"קה\"מ QA","date":"30/04/2026","amount":36035.41},{"docNum":"3157215","client":"קה\"מ QA","date":"30/04/2026","amount":182828.02},{"docNum":"3157216","client":"פרויקטים ח\"א קריה","date":"30/04/2026","amount":20061.89},{"docNum":"3157217","client":"קריית המודיעין","date":"30/04/2026","amount":203773.15},{"docNum":"3157219","client":"בא\"ח 900 -","date":"30/04/2026","amount":63576.51},{"docNum":"3157226","client":"מתכננים - מרחב בינוי 565 (4441220475)","date":"31/05/2026","amount":34012.04},{"docNum":"3157367","client":"מתאמים- מרחב בינוי 565 (4441220145)","date":"31/05/2026","amount":8521.49},{"docNum":"3157368","client":"קה\"מ QA","date":"31/05/2026","amount":262155.55},{"docNum":"3157369","client":"קריית המודיעין","date":"31/05/2026","amount":231326.5},{"docNum":"3157371","client":"בא\"ח 900 -","date":"31/05/2026","amount":45162.26},{"docNum":"3157374","client":"קריית המודיעין","date":"31/05/2026","amount":48791.3},{"docNum":"3157382","client":"קה\"מ QA","date":"31/05/2026","amount":55288.6},{"docNum":"3157379","client":"קה\"מ QA","date":"05/06/2026","amount":81225.5},{"docNum":"3157039","client":"מ1 תכנון","date":"31/03/2026","amount":43672.78},{"docNum":"3157201","client":"מ1 תכנון","date":"23/04/2026","amount":60844.46},{"docNum":"3157231","client":"מ1 ביצוע","date":"30/04/2026","amount":398843.98},{"docNum":"3157222","client":"מ1 תכנון","date":"30/04/2026","amount":137378.4},{"docNum":"3157366","client":"שער חדש","date":"31/05/2026","amount":22419.7},{"docNum":"3157375","client":"מ1 תכנון","date":"31/05/2026","amount":190048.97},{"docNum":"3157380","client":"מ1 ביצוע","date":"31/05/2026","amount":452408.9},{"docNum":"3151357","client":"באר יעקב - פארק - חוזה מספר 1077 - מטלה 2.3","date":"05/08/2025","amount":50994.36},{"docNum":"3155992","client":"מתחם 3 שכונה חוזה 1089","date":"05/08/2025","amount":150689.48},{"docNum":"3152300","client":"באר יעקב סיפריה בית העם מבנה לשימור","date":"21/09/2025","amount":25782.5},{"docNum":"3154042","client":"באר יעקב שיפוץ מקווה גברים","date":"15/01/2026","amount":58052.88},{"docNum":"3157098","client":"באר יעקב שיפוץ מתנ\"ס קיים עוזיאל 13","date":"14/04/2026","amount":11418.65},{"docNum":"3157239","client":"פיקוח מלתחות אולם ספורט מצמרות באר יעקב","date":"12/05/2026","amount":147715.13},{"docNum":"3157242","client":"בית כנסת באר החיים 244337","date":"17/05/2026","amount":154137.55},{"docNum":"3157243","client":"באר יעקב שיפוץ מתנ\"ס קיים עוזיאל 13","date":"17/05/2026","amount":10186.63},{"docNum":"3157341","client":"הכנת תוכנית מפורטת (תב\"ע) בית עלמין ואישורה בועדה","date":"20/05/2026","amount":479999.99},{"docNum":"3157343","client":"תכנון שיפוץ בתי ספר - שי אלמלם","date":"25/05/2026","amount":158272.28},{"docNum":"3157235","client":"היכל ומגדל המשפט ירושלים","date":"30/04/2026","amount":1022122.93},{"docNum":"3157204","client":"ייעוץ למכרז בחירת ספק חשמל -","date":"30/04/2026","amount":13344.38},{"docNum":"3157205","client":"מתחם עיתונאים קומה 2 -","date":"30/04/2026","amount":834.02},{"docNum":"3157208","client":"הטמנת תשתיות חשמל -","date":"30/04/2026","amount":31773.62},{"docNum":"3157347","client":"ייעוץ ותכנון מבנה משל\"ט","date":"31/05/2026","amount":56079.77},{"docNum":"3157348","client":"ייעוץ למכרז בחירת ספק חשמל -","date":"31/05/2026","amount":20016.58},{"docNum":"3157349","client":"מכרז יועצים - קונסטרקטור -","date":"31/05/2026","amount":10425.3},{"docNum":"3157353","client":"שפרינצק -","date":"31/05/2026","amount":16888.99},{"docNum":"3157354","client":"הטמנת תשתיות חשמל -","date":"31/05/2026","amount":233977.24},{"docNum":"3154978","client":"סוקרטס ברן","date":"31/01/2026","amount":4886.5},{"docNum":"3157339","client":"סוקרטס ברן","date":"26/02/2026","amount":8511.97},{"docNum":"3157229","client":"BIM ממ\"ג","date":"30/04/2026","amount":36229.48},{"docNum":"3157211","client":"סוקרטס ברן","date":"30/04/2026","amount":8196.71},{"docNum":"3157213","client":"כנסת ישראל","date":"30/04/2026","amount":91550.28},{"docNum":"3157364","client":"BIM ממ\"ג","date":"31/05/2026","amount":10378.3},{"docNum":"3157370","client":"כנסת ישראל","date":"31/05/2026","amount":117926.29},{"docNum":"3157004","client":"תל נוף - בית מחודש מ.ק 126","date":"26/02/2026","amount":44623.12},{"docNum":"3157031","client":"תל נוף - בית מחודש מ.ק 126","date":"31/03/2026","amount":48804.8},{"docNum":"3157218","client":"תל נוף - בית מחודש מ.ק 126","date":"30/04/2026","amount":39701.04},{"docNum":"3157359","client":"תל נוף - בית מחודש מ.ק 126","date":"31/05/2026","amount":39653.9},{"docNum":"3157035","client":"מבנה 201 - BIM הזמנה","date":"31/03/2026","amount":29469.79},{"docNum":"3157224","client":"מבנה 201 - BIM הזמנה","date":"30/04/2026","amount":11195.09},{"docNum":"3157358","client":"- גיל דומש","date":"31/05/2026","amount":43572.23},{"docNum":"3157360","client":"מבנה 201 - ניהול תכנון","date":"31/05/2026","amount":33239.18},{"docNum":"3157363","client":"מבנה 201 - BIM הזמנה","date":"31/05/2026","amount":15677.24},{"docNum":"3154982","client":"פרויקט יום טוב/ ים כנרת","date":"31/01/2026","amount":16669.51},{"docNum":"3157005","client":"פרויקט יום טוב/ ים כנרת","date":"26/02/2026","amount":10447.25},{"docNum":"3157033","client":"פרויקט יום טוב/ ים כנרת","date":"31/03/2026","amount":16131.78},{"docNum":"3157238","client":"פרויקט יום טוב/ ים כנרת","date":"30/04/2026","amount":11959.03},{"docNum":"3157362","client":"פרויקט יום טוב/ ים כנרת","date":"31/05/2026","amount":28576.3},{"docNum":"3157210","client":"עריית בת ים ניהול ופיקוח יאיר רחימי","date":"30/04/2026","amount":41170.2},{"docNum":"3157361","client":"עריית בת ים ניהול ופיקוח יאיר רחימי","date":"31/05/2026","amount":42379.7},{"docNum":"3157378","client":"החטיבה להתיישבות חוזה","date":"31/05/2026","amount":76513.56},{"docNum":"3157373","client":"פאה מזרחית","date":"31/05/2026","amount":71036.0},{"docNum":"3157372","client":"שירותי פיקוח הנדסי צמוד 923 -","date":"31/05/2026","amount":51920.0},{"docNum":"3157376","client":"יד לבנים","date":"31/05/2026","amount":15930.0},{"docNum":"3157012","client":"ערבה","date":"26/02/2026","amount":2336.4},{"docNum":"3157357","client":"ערבה","date":"31/05/2026","amount":6619.8},{"docNum":"3157013","client":"חניון טראפו","date":"26/02/2026","amount":3466.92},{"docNum":"3157014","client":"אוניברסיטה","date":"26/02/2026","amount":1440.27},{"docNum":"3157356","client":"חניון טראפו","date":"31/05/2026","amount":3018.36}];
+const DEFAULT_UNPAID = [{"docNum":"3157029","client":"שב\"ס","date":"31/03/2026","amount":327671.62,"project":"כלא מגידו"},{"docNum":"3157234","client":"שב\"ס","date":"07/05/2026","amount":305203.55,"project":"כלא מגידו"},{"docNum":"3157241","client":"שב\"ס","date":"17/05/2026","amount":109.37,"project":"כלא מגידו"},{"docNum":"3157340","client":"שב\"ס","date":"19/05/2026","amount":1678494.1,"project":"כלא מגידו"},{"docNum":"3157342","client":"שב\"ס","date":"20/05/2026","amount":1074059.53,"project":"כלא מגידו"},{"docNum":"3157365","client":"שב\"ס","date":"31/05/2026","amount":151627.42,"project":"ניהול ופיקוח עופר - בינוי אגפים חדשים -"},{"docNum":"3157478","client":"שב\"ס","date":"31/05/2026","amount":13998.8,"project":"כלא מגידו"},{"docNum":"3157499","client":"שב\"ס","date":"31/05/2026","amount":145211.86,"project":"כלא מגידו"},{"docNum":"3157381","client":"שב\"ס","date":"09/06/2026","amount":557413.12,"project":"כלא מגידו"},{"docNum":"3157500","client":"שב\"ס","date":"18/06/2026","amount":7341.96,"project":"כלא מגידו"},{"docNum":"3157501","client":"שב\"ס","date":"18/06/2026","amount":232.64,"project":"כלא מגידו"},{"docNum":"3157502","client":"שב\"ס","date":"21/06/2026","amount":109.83,"project":"כלא מגידו"},{"docNum":"3154018","client":"משרד הביטחון","date":"31/12/2025","amount":12829.9,"project":"פבל"},{"docNum":"3154027","client":"משרד הביטחון","date":"31/12/2025","amount":6557.5,"project":"פרויקטים ח\"א קריה"},{"docNum":"3154028","client":"משרד הביטחון","date":"31/12/2025","amount":119310.65,"project":"מתכננים - מרחב בינוי 565 (4441220475)"},{"docNum":"3154985","client":"משרד הביטחון","date":"31/01/2026","amount":11315.87,"project":"פבל"},{"docNum":"3154991","client":"משרד הביטחון","date":"31/01/2026","amount":26728.42,"project":"פרויקטים ח\"א קריה"},{"docNum":"3157487","client":"משרד הביטחון","date":"31/01/2026","amount":14419.13,"project":"קה\"מ QA"},{"docNum":"3156997","client":"משרד הביטחון","date":"26/02/2026","amount":192571.54,"project":"קה\"מ QA"},{"docNum":"3157003","client":"משרד הביטחון","date":"26/02/2026","amount":17267.55,"project":"פרויקטים ח\"א קריה"},{"docNum":"3157011","client":"משרד הביטחון","date":"26/02/2026","amount":54540.04,"project":"קריית המודיעין"},{"docNum":"3157488","client":"משרד הביטחון","date":"26/02/2026","amount":11101.71,"project":"קה\"מ QA"},{"docNum":"3157040","client":"","date":"31/03/2026","amount":29608.44,"project":"בא\"ח 900 -"},{"docNum":"3157041","client":"משרד הביטחון","date":"31/03/2026","amount":210209.72,"project":"קה\"מ QA"},{"docNum":"3157054","client":"משרד הביטחון","date":"31/03/2026","amount":57298.61,"project":"קריית המודיעין"},{"docNum":"3157101","client":"משרד הביטחון","date":"31/03/2026","amount":40465.36,"project":"קה\"מ QA"},{"docNum":"3155995","client":"משרד הביטחון","date":"30/04/2026","amount":22346.62,"project":"פיילוט אגירת אנרגיה"},{"docNum":"3157223","client":"משרד הביטחון","date":"30/04/2026","amount":8256.11,"project":"פבל"},{"docNum":"3157225","client":"משרד הביטחון","date":"30/04/2026","amount":9532.51,"project":"מתאמים- מרחב בינוי 565 (4441220145)"},{"docNum":"3157227","client":"משרד הביטחון","date":"30/04/2026","amount":40165.68,"project":"קריית המודיעין"},{"docNum":"3157228","client":"משרד הביטחון","date":"30/04/2026","amount":36035.41,"project":"קה\"מ QA"},{"docNum":"3157215","client":"משרד הביטחון","date":"30/04/2026","amount":182828.02,"project":"קה\"מ QA"},{"docNum":"3157216","client":"משרד הביטחון","date":"30/04/2026","amount":20061.89,"project":"פרויקטים ח\"א קריה"},{"docNum":"3157217","client":"משרד הביטחון","date":"30/04/2026","amount":203773.15,"project":"קריית המודיעין"},{"docNum":"3157219","client":"","date":"30/04/2026","amount":63576.51,"project":"בא\"ח 900 -"},{"docNum":"3157226","client":"משרד הביטחון","date":"31/05/2026","amount":34012.04,"project":"מתכננים - מרחב בינוי 565 (4441220475)"},{"docNum":"3157367","client":"משרד הביטחון","date":"31/05/2026","amount":8521.49,"project":"מתאמים- מרחב בינוי 565 (4441220145)"},{"docNum":"3157368","client":"משרד הביטחון","date":"31/05/2026","amount":262155.55,"project":"קה\"מ QA"},{"docNum":"3157369","client":"משרד הביטחון","date":"31/05/2026","amount":231326.5,"project":"קריית המודיעין"},{"docNum":"3157371","client":"","date":"31/05/2026","amount":45162.26,"project":"בא\"ח 900 -"},{"docNum":"3157374","client":"משרד הביטחון","date":"31/05/2026","amount":48791.3,"project":"קריית המודיעין"},{"docNum":"3157382","client":"משרד הביטחון","date":"31/05/2026","amount":55288.6,"project":"קה\"מ QA"},{"docNum":"3157379","client":"משרד הביטחון","date":"05/06/2026","amount":81225.5,"project":"קה\"מ QA"},{"docNum":"3157039","client":"","date":"31/03/2026","amount":43672.78,"project":"מ1 תכנון"},{"docNum":"3157201","client":"","date":"23/04/2026","amount":60844.46,"project":"מ1 תכנון"},{"docNum":"3157231","client":"","date":"30/04/2026","amount":398843.98,"project":"מ1 ביצוע"},{"docNum":"3157222","client":"","date":"30/04/2026","amount":137378.4,"project":"מ1 תכנון"},{"docNum":"3157366","client":"קריית המחקר הגרעיני","date":"31/05/2026","amount":22419.7,"project":"שער חדש"},{"docNum":"3157375","client":"","date":"31/05/2026","amount":190048.97,"project":"מ1 תכנון"},{"docNum":"3157380","client":"","date":"31/05/2026","amount":452408.9,"project":"מ1 ביצוע"},{"docNum":"3151357","client":"","date":"05/08/2025","amount":50994.36,"project":"באר יעקב - פארק - חוזה מספר 1077 - מטלה 2.3"},{"docNum":"3155992","client":"עיריית באר יעקב","date":"05/08/2025","amount":150689.48,"project":"מתחם 3 שכונה חוזה 1089"},{"docNum":"3152300","client":"עיריית באר יעקב","date":"21/09/2025","amount":25782.5,"project":"באר יעקב סיפריה בית העם מבנה לשימור"},{"docNum":"3154042","client":"עיריית באר יעקב","date":"15/01/2026","amount":58052.88,"project":"באר יעקב שיפוץ מקווה גברים"},{"docNum":"3157098","client":"עיריית באר יעקב","date":"14/04/2026","amount":11418.65,"project":"באר יעקב שיפוץ מתנ\"ס קיים עוזיאל 13"},{"docNum":"3157239","client":"","date":"12/05/2026","amount":147715.13,"project":"פיקוח מלתחות אולם ספורט מצמרות באר יעקב"},{"docNum":"3157242","client":"עיריית באר יעקב","date":"17/05/2026","amount":154137.55,"project":"בית כנסת באר החיים 244337"},{"docNum":"3157243","client":"עיריית באר יעקב","date":"17/05/2026","amount":10186.63,"project":"באר יעקב שיפוץ מתנ\"ס קיים עוזיאל 13"},{"docNum":"3157341","client":"","date":"20/05/2026","amount":479999.99,"project":"הכנת תוכנית מפורטת (תב\"ע) בית עלמין ואישורה בועדה"},{"docNum":"3157343","client":"עיריית באר יעקב","date":"25/05/2026","amount":158272.28,"project":"תכנון שיפוץ בתי ספר - שי אלמלם"},{"docNum":"3157235","client":"מנהל הדיור הממשלתי","date":"30/04/2026","amount":1022122.93,"project":"היכל ומגדל המשפט ירושלים"},{"docNum":"3157204","client":"","date":"30/04/2026","amount":13344.38,"project":"ייעוץ למכרז בחירת ספק חשמל -"},{"docNum":"3157205","client":"כנסת ישראל","date":"30/04/2026","amount":834.02,"project":"מתחם עיתונאים קומה 2 -"},{"docNum":"3157208","client":"","date":"30/04/2026","amount":31773.62,"project":"הטמנת תשתיות חשמל -"},{"docNum":"3157347","client":"כנסת ישראל","date":"31/05/2026","amount":56079.77,"project":"ייעוץ ותכנון מבנה משל\"ט"},{"docNum":"3157348","client":"","date":"31/05/2026","amount":20016.58,"project":"ייעוץ למכרז בחירת ספק חשמל -"},{"docNum":"3157349","client":"","date":"31/05/2026","amount":10425.3,"project":"מכרז יועצים - קונסטרקטור -"},{"docNum":"3157353","client":"כנסת ישראל","date":"31/05/2026","amount":16888.99,"project":"שפרינצק -"},{"docNum":"3157354","client":"","date":"31/05/2026","amount":233977.24,"project":"הטמנת תשתיות חשמל -"},{"docNum":"3154978","client":"ברן ישראל בע\"מ","date":"31/01/2026","amount":4886.5,"project":"סוקרטס ברן"},{"docNum":"3157339","client":"ברן ישראל בע\"מ","date":"26/02/2026","amount":8511.97,"project":"סוקרטס ברן"},{"docNum":"3157229","client":"","date":"30/04/2026","amount":36229.48,"project":"BIM ממ\"ג"},{"docNum":"3157211","client":"ברן ישראל בע\"מ","date":"30/04/2026","amount":8196.71,"project":"סוקרטס ברן"},{"docNum":"3157213","client":"ברן ישראל בע\"מ","date":"30/04/2026","amount":91550.28,"project":"כנסת ישראל"},{"docNum":"3157364","client":"","date":"31/05/2026","amount":10378.3,"project":"BIM ממ\"ג"},{"docNum":"3157370","client":"ברן ישראל בע\"מ","date":"31/05/2026","amount":117926.29,"project":"כנסת ישראל"},{"docNum":"3157004","client":"עדא כרמי מלמד אדריכלים בע\"מ","date":"26/02/2026","amount":44623.12,"project":"תל נוף - בית מחודש מ.ק 126"},{"docNum":"3157031","client":"עדא כרמי מלמד אדריכלים בע\"מ","date":"31/03/2026","amount":48804.8,"project":"תל נוף - בית מחודש מ.ק 126"},{"docNum":"3157218","client":"עדא כרמי מלמד אדריכלים בע\"מ","date":"30/04/2026","amount":39701.04,"project":"תל נוף - בית מחודש מ.ק 126"},{"docNum":"3157359","client":"עדא כרמי מלמד אדריכלים בע\"מ","date":"31/05/2026","amount":39653.9,"project":"תל נוף - בית מחודש מ.ק 126"},{"docNum":"3157035","client":"","date":"31/03/2026","amount":29469.79,"project":"מבנה 201 - BIM הזמנה"},{"docNum":"3157224","client":"","date":"30/04/2026","amount":11195.09,"project":"מבנה 201 - BIM הזמנה"},{"docNum":"3157358","client":"מרכז למחקר גרעיני שורק","date":"31/05/2026","amount":43572.23,"project":"- גיל דומש"},{"docNum":"3157360","client":"מרכז למחקר גרעיני שורק","date":"31/05/2026","amount":33239.18,"project":"מבנה 201 - ניהול תכנון"},{"docNum":"3157363","client":"","date":"31/05/2026","amount":15677.24,"project":"מבנה 201 - BIM הזמנה"},{"docNum":"3154982","client":"מרכז למחקר גרעיני שורק","date":"31/01/2026","amount":16669.51,"project":"פרויקט יום טוב/ ים כנרת"},{"docNum":"3157005","client":"מרכז למחקר גרעיני שורק","date":"26/02/2026","amount":10447.25,"project":"פרויקט יום טוב/ ים כנרת"},{"docNum":"3157033","client":"מרכז למחקר גרעיני שורק","date":"31/03/2026","amount":16131.78,"project":"פרויקט יום טוב/ ים כנרת"},{"docNum":"3157238","client":"מרכז למחקר גרעיני שורק","date":"30/04/2026","amount":11959.03,"project":"פרויקט יום טוב/ ים כנרת"},{"docNum":"3157362","client":"מרכז למחקר גרעיני שורק","date":"31/05/2026","amount":28576.3,"project":"פרויקט יום טוב/ ים כנרת"},{"docNum":"3157210","client":"עיריית בת ים","date":"30/04/2026","amount":41170.2,"project":"עריית בת ים ניהול ופיקוח יאיר רחימי"},{"docNum":"3157361","client":"עיריית בת ים","date":"31/05/2026","amount":42379.7,"project":"עריית בת ים ניהול ופיקוח יאיר רחימי"},{"docNum":"3157378","client":"החטיבה להתיישבות בהסתדרות הציונית העולמית","date":"31/05/2026","amount":76513.56,"project":"החטיבה להתיישבות חוזה"},{"docNum":"3157373","client":"","date":"31/05/2026","amount":71036.0,"project":"פאה מזרחית"},{"docNum":"3157372","client":"","date":"31/05/2026","amount":51920.0,"project":"שירותי פיקוח הנדסי צמוד 923 -"},{"docNum":"3157376","client":"YBOX","date":"31/05/2026","amount":15930.0,"project":"יד לבנים"},{"docNum":"3157012","client":"כ\"ד","date":"26/02/2026","amount":2336.4,"project":"ערבה"},{"docNum":"3157357","client":"כ\"ד","date":"31/05/2026","amount":6619.8,"project":"ערבה"},{"docNum":"3157013","client":"מדיה קומפסט","date":"26/02/2026","amount":3466.92,"project":"חניון טראפו"},{"docNum":"3157014","client":"מדיה קומפסט","date":"26/02/2026","amount":1440.27,"project":"אוניברסיטה"},{"docNum":"3157356","client":"מדיה קומפסט","date":"31/05/2026","amount":3018.36,"project":"חניון טראפו"}];
 
 let unpaidData = [];
 
@@ -1023,6 +1024,15 @@ function lsSaveUnpaid(arr){ try{ localStorage.setItem(LS_UNPAID_KEY, JSON.string
 function initUnpaid(){
   const stored = lsLoadUnpaid();
   unpaidData = stored !== null ? stored : JSON.parse(JSON.stringify(DEFAULT_UNPAID));
+  unpaidData.sort((a,b)=>{
+    const pa=a.date.split('/'); const pb=b.date.split('/');
+    return (Number(pa[2])*10000+Number(pa[1])*100+Number(pa[0]))-(Number(pb[2])*10000+Number(pb[1])*100+Number(pb[0]));
+  });
+  const sel = document.getElementById('gaviaClientFilter');
+  if(sel){
+    const clients = [...new Set(DEFAULT_UNPAID.map(r=>r.client||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'he'));
+    sel.innerHTML = '<option value="">כל הלקוחות</option>' + clients.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  }
   renderUnpaid();
 }
 
@@ -1030,7 +1040,12 @@ function fmt(n){ return '₪' + Number(n).toLocaleString('he-IL',{minimumFractio
 
 function renderUnpaid(){
   const q = (document.getElementById('gaviaSearch')||{value:''}).value.trim().toLowerCase();
-  const rows = unpaidData.filter(r => !q || r.client.toLowerCase().includes(q));
+  const clientF = (document.getElementById('gaviaClientFilter')||{value:''}).value;
+  const rows = unpaidData.filter(r => {
+    if(clientF && (r.client||'') !== clientF) return false;
+    if(q && !((r.client||'').toLowerCase().includes(q)||(r.project||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
 
   const total = unpaidData.reduce((s,r)=>s+r.amount,0);
   const filteredTotal = rows.reduce((s,r)=>s+r.amount,0);
@@ -1041,55 +1056,29 @@ function renderUnpaid(){
 
   const tbody = document.getElementById('gaviaTbody');
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="empty">לא נמצאו חשבוניות</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="empty">לא נמצאו חשבוניות</td></tr>';
     return;
   }
-  tbody.innerHTML = rows.map(r => `
-    <tr>
-      <td>${r.date}</td>
-      <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.client.replace(/"/g,'&quot;')}">${r.client}</td>
-      <td>${r.docNum}</td>
-      <td class="amount">${fmt(r.amount)}</td>
-      <td><button class="btn-paid" onclick="markPaid('${r.docNum}')">שולם ✓</button></td>
-    </tr>`).join('');
+  tbody.innerHTML = rows.map(r => '<tr><td>'+r.date+'</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(r.client||'').replace(/"/g,"&quot;")+'">'+(r.client||'-')+'</td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(r.project||'').replace(/"/g,"&quot;")+'">'+(r.project||r.client||'')+'</td><td>'+r.docNum+'</td><td class="amount">'+fmt(r.amount)+'</td></tr>').join('');
 }
 
-function markPaid(docNum){
-  const idx = unpaidData.findIndex(r => r.docNum === docNum);
-  if(idx === -1) return;
-  // brief visual feedback
-  const tbody = document.getElementById('gaviaTbody');
-  const btns = tbody.querySelectorAll('.btn-paid');
-  btns.forEach(b => { if(b.getAttribute('onclick') && b.getAttribute('onclick').includes(docNum)){ b.closest('tr').classList.add('paid-row'); } });
-  setTimeout(()=>{
-    unpaidData.splice(idx, 1);
-    lsSaveUnpaid(unpaidData);
-    renderUnpaid();
-  }, 400);
-}
 
 function checkUnpaidMatch(project, client){
   if(!project && !client) return;
-  const search = (project||'').toLowerCase();
+  const searchProj = (project||'').toLowerCase();
   const searchClient = (client||'').toLowerCase();
   const matchIdx = unpaidData.findIndex(r => {
-    const rc = r.client.toLowerCase();
-    return (search && rc.includes(search)) || (searchClient && rc.includes(searchClient));
+    const rp = (r.project||'').toLowerCase();
+    const rc = (r.client||'').toLowerCase();
+    return (searchProj && (rp.includes(searchProj)||rc.includes(searchProj))) ||
+           (searchClient && (rc.includes(searchClient)||rp.includes(searchClient)));
   });
   if(matchIdx !== -1){
     const matched = unpaidData[matchIdx];
     unpaidData.splice(matchIdx, 1);
     lsSaveUnpaid(unpaidData);
     renderUnpaid();
-    showToast(`✓ החשבון "${matched.client}" סומן כשולם אוטומטית`, "success");
-  } else {
-    const name = project || client || '';
-    if(!name) return;
-    const confirmed = confirm(`החשבון "${name}" לא נמצא ברשימה. האם להוסיף לדשבורד בכל זאת?`);
-    // כן = confirmed (true) — just a prompt, actual adding is handled by caller if needed
-    if(confirmed){
-      showToast(`✓ הרשומה נוספה לדשבורד`, "success");
-    }
+    showToast('✓ החשבון "' + (matched.project||matched.client) + '" סומן כשולם אוטומטית', "success");
   }
 }
 
