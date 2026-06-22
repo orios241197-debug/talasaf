@@ -1050,14 +1050,12 @@ function renderUnpaid(){
     return true;
   });
 
-  const total = unpaidData.reduce((s,r)=>s+r.amount,0);
-  const totalNoVat = unpaidData.reduce((s,r)=>s+(r.amountNoVat||0),0);
   const filteredTotal = rows.reduce((s,r)=>s+r.amount,0);
   const filteredNoVat = rows.reduce((s,r)=>s+(r.amountNoVat||0),0);
 
-  document.getElementById('gaviaTotal').textContent = fmt(total);
-  document.getElementById('gaviaTotalNoVat').textContent = fmt(totalNoVat);
-  document.getElementById('gaviaCount').textContent = unpaidData.length;
+  document.getElementById('gaviaTotal').textContent = fmt(filteredTotal);
+  document.getElementById('gaviaTotalNoVat').textContent = fmt(filteredNoVat);
+  document.getElementById('gaviaCount').textContent = rows.length;
   document.getElementById('gaviaFooterTotal').textContent = fmt(filteredTotal);
   document.getElementById('gaviaFooterNoVat').textContent = fmt(filteredNoVat);
 
