@@ -849,7 +849,9 @@ function detectDocType(allPagesText) {
   return "מסמך";
 }
 
-// ── Main upload flow ────────────────────────────────────────────────────────
+// ── Main upload flow — uses local Python server (python server.py) ──────────
+const LOCAL_SERVER = "http://localhost:5555/upload";
+
 document.getElementById("fileInput").addEventListener("change", async function(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -860,20 +862,29 @@ document.getElementById("fileInput").addEventListener("change", async function(e
   label.style.pointerEvents = "none";
   label.style.opacity = "0.6";
   btnText.textContent = "מעבד...";
-  showToast("⏳ טוען PDF.js ומעבד, אנא המתן...", "loading");
+  showToast("⏳ מעבד PDF...", "loading");
 
   try {
-    const pages = await parsePDFBrowser(file);
-    const docType = detectDocType(pages);
+    const formData = new FormData();
+    formData.append("pdf", file);
 
-    // Each page = one record
-    const newRecords = [];
-    for (const pageText of pages) {
-      const rec = parsePage(pageText, docType);
-      if (rec.amount > 0 || rec.docNum) newRecords.push(rec);
+    let res;
+    try {
+      res = await fetch(LOCAL_SERVER, { method: "POST", body: formData });
+    } catch(netErr) {
+      showToast("⚠️ השרת המקומי לא פועל. פתח את התיקייה והרץ: python server.py", "error");
+      label.style.pointerEvents = ""; label.style.opacity = ""; btnText.textContent = "עדכן נתונים";
+      return;
     }
 
-    // Dedup: skip records already in allData (same date+docNum or same date+amount+client)
+    const result = await res.json();
+    if (!result.ok) {
+      showToast("שגיאה: " + (result.error || "בעיה לא ידועה"), "error");
+      label.style.pointerEvents = ""; label.style.opacity = ""; btnText.textContent = "עדכן נתונים";
+      return;
+    }
+
+    const newRecords = result.records || [];
     const existingKeys = new Set(allData.map(r => r.date + "|" + r.docNum));
     let added = 0, duplicates = 0;
     for (const rec of newRecords) {
@@ -895,8 +906,7 @@ document.getElementById("fileInput").addEventListener("change", async function(e
       showToast(`כל ${duplicates} הרשומות כבר קיימות באתר`, "success");
     }
   } catch (err) {
-    console.error(err);
-    showToast("שגיאה בעיבוד הקובץ: " + err.message, "error");
+    showToast("שגיאה: " + err.message, "error");
   }
 
   label.style.pointerEvents = "";
