@@ -1031,7 +1031,7 @@ function initUnpaid(){
   const sel = document.getElementById('gaviaClientFilter');
   if(sel){
     const clients = [...new Set(DEFAULT_UNPAID.map(r=>r.client||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'he'));
-    sel.innerHTML = '<option value="">כל הלקוחות</option>' + clients.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+    sel.innerHTML = '<option value="">כל הלקוחות</option>' + clients.map(c=>'<option value="'+c.replace(/"/g,'&quot;')+'">'+c+'</option>').join('');
   }
   renderUnpaid();
 }
