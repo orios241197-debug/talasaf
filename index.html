@@ -194,9 +194,11 @@ td.cs-count{text-align:center;color:var(--gray-dark);}
 
 <div id="loginScreen" style="display:flex;">
   <div class="login-box">
-    <div class="login-logo-wrap">
-      <img src="logo.png" alt="טל אסף" onerror="this.style.display='none';document.getElementById('loginLogoFallback').style.display='block'"/>
+    <div class="login-logo-wrap" style="display:flex;align-items:center;justify-content:center;gap:18px;">
+      <img src="logo.png" alt="טל אסף" style="max-height:70px;max-width:140px;object-fit:contain;" onerror="this.style.display='none';document.getElementById('loginLogoFallback').style.display='block'"/>
       <div id="loginLogoFallback" style="display:none;font-size:28px;font-weight:800;color:var(--gray-dark);letter-spacing:-1px;">טל <span style="color:var(--orange)">אסף</span></div>
+      <div style="width:1px;height:50px;background:var(--border);"></div>
+      <img src="precise_logo.png" alt="Precise" style="max-height:50px;max-width:110px;object-fit:contain;"/>
     </div>
     <div class="login-divider"></div>
     <h2>ברוך הבא</h2>
@@ -238,7 +240,9 @@ td.cs-count{text-align:center;color:var(--gray-dark);}
 <div id="app" style="display:block;">
 <header>
   <div class="hlogo">
-    <img src="logo.png" alt="לוגו"/>
+    <img src="logo.png" alt="טל אסף"/>
+    <div class="hdiv"></div>
+    <img src="precise_logo.png" alt="Precise" style="height:32px;object-fit:contain;"/>
     <div class="hdiv"></div>
     <div class="htitle"><h1>דשבורד תקבולים</h1><p>ניהול ותכנון פרויקטים בע"מ</p></div>
   </div>
