@@ -605,12 +605,22 @@ function showToast(msg, type) {
 }
 
 // ── localStorage helpers ────────────────────────────────────────────────────
-const LS_KEY = "ta_data_v2";
+const LS_KEY = "ta_data_v3";
 function lsSave(data) {
   try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e){}
 }
 function lsLoad() {
-  try { const s=localStorage.getItem(LS_KEY); return s?JSON.parse(s):null; } catch(e){return null;}
+  try {
+    const s=localStorage.getItem(LS_KEY);
+    if (!s) return null;
+    const d=JSON.parse(s);
+    // Sanity check: if average amount > ₪1M, data is corrupt — discard
+    if (Array.isArray(d) && d.length > 0) {
+      const avg = d.reduce((s,r)=>s+(r.amount||0),0) / d.length;
+      if (avg > 1000000) { localStorage.removeItem(LS_KEY); return null; }
+    }
+    return d;
+  } catch(e){return null;}
 }
 
 // ── CLIENT_MERGE map ────────────────────────────────────────────────────────
@@ -758,25 +768,37 @@ function parsePage(pageText, docType) {
     }
   }
 
-  // Amount — line with "סה\"כ לתשלום" or "סה\"כ"
+  // Amount — search in RAW line (numbers are not RTL-reversed in PDF)
+  // fixHeb is only used to detect Hebrew keywords, numbers extracted from raw line
   let amount = 0;
+  const amountMarkers = ['םולשתל כ"הס', 'לתשלום כ"הס', 'לתשלום סה"כ', 'כ"הס', 'סה"כ'];
   for (const l of lines) {
     const fl = fixHeb(l);
-    if (fl.includes('סה"כ לתשלום') || (fl.includes('סה"כ') && fl.includes("תשלום"))) {
-      const nums = fl.match(/[\d,]+\.?\d*/g);
+    const isAmountLine = fl.includes('סה"כ לתשלום') || fl.includes('לתשלום') ||
+                         amountMarkers.some(m => l.includes(m));
+    if (isAmountLine) {
+      // Extract numbers from RAW line (not fixed) - amounts are not character-reversed
+      const nums = l.match(/[\d,]+\.?\d*/g);
       if (nums) {
-        const candidates = nums.map(n => parseFloat(n.replace(/,/g,""))).filter(v => v > 100);
+        const candidates = nums.map(n => parseFloat(n.replace(/,/g,""))).filter(v => v > 100 && v < 500000);
         if (candidates.length) { amount = Math.max(...candidates); break; }
+      }
+      // Also try from fixed line
+      if (!amount) {
+        const numsF = fl.match(/[\d,]+\.?\d*/g);
+        if (numsF) {
+          const candidates = numsF.map(n => parseFloat(n.replace(/,/g,""))).filter(v => v > 100 && v < 500000);
+          if (candidates.length) { amount = Math.max(...candidates); break; }
+        }
       }
     }
   }
   if (!amount) {
-    // fallback: largest number in page
+    // fallback: largest plausible invoice amount (capped at ₪500K to avoid account numbers)
     for (const l of lines) {
-      const fl = fixHeb(l);
-      const nums = fl.match(/[\d,]+\.?\d*/g);
+      const nums = l.match(/[\d,]+\.?\d*/g);
       if (nums) {
-        const candidates = nums.map(n=>parseFloat(n.replace(/,/g,""))).filter(v=>v>1000&&v<10000000);
+        const candidates = nums.map(n=>parseFloat(n.replace(/,/g,""))).filter(v=>v>1000&&v<500000);
         if (candidates.length) { const mx=Math.max(...candidates); if(mx>amount) amount=mx; }
       }
     }
