@@ -210,14 +210,25 @@ td.cs-count{text-align:center;color:var(--gray-dark);}
 </head>
 <body>
 
-    <div id="loginScreen" style="display:none;position:fixed;inset:0;background:#1a1a2e;z-index:9999;display:flex;align-items:center;justify-content:center;">
-      <div style="background:#16213e;padding:40px;border-radius:12px;width:320px;text-align:center;direction:rtl;">
-        <div style="font-size:24px;font-weight:700;color:#e2e8f0;margin-bottom:8px;">טל אסף</div>
-        <div style="font-size:13px;color:#94a3b8;margin-bottom:28px;">ניהול ותכנון פרויקטים</div>
-        <input id="lU" type="text" placeholder="שם משתמש" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#0f3460;color:#e2e8f0;font-size:15px;margin-bottom:12px;box-sizing:border-box;text-align:right;" autocomplete="username">
-        <input id="lP" type="password" placeholder="סיסמא" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#0f3460;color:#e2e8f0;font-size:15px;margin-bottom:16px;box-sizing:border-box;text-align:right;" autocomplete="current-password">
-        <div id="lErr" style="display:none;color:#f87171;font-size:13px;margin-bottom:12px;"></div>
-        <button onclick="__doLogin()" style="width:100%;padding:11px;border-radius:8px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;">כניסה</button>
+    <div id="loginScreen" style="display:none;" class="login-screen-outer">
+      <div class="login-box">
+        <div class="login-logo-wrap">
+          <img src="precise_logo.png" alt="Precise" onerror="this.style.display='none'">
+        </div>
+        <div class="login-divider"></div>
+        <h2>טל אסף</h2>
+        <p class="login-sub">ניהול ותכנון פרויקטים בע"מ</p>
+        <div class="login-field">
+          <label for="lU">שם משתמש</label>
+          <input id="lU" type="text" placeholder="הכנס שם משתמש" autocomplete="username">
+        </div>
+        <div class="login-field">
+          <label for="lP">סיסמא</label>
+          <input id="lP" type="password" placeholder="הכנס סיסמא" autocomplete="current-password">
+        </div>
+        <div id="lErr"></div>
+        <button class="btn-login" onclick="__doLogin()">כניסה</button>
+        <div class="login-footer">© Precise Project Management</div>
       </div>
     </div>
 
