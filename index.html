@@ -6,101 +6,30 @@
 <title>דשבורד תקבולים | טל אסף</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
 (function(){
-  // ── הגדרות EmailJS ──────────────────────────────────────────
-  const SKIP_2FA = true; // הסר כשEmailJS מוגדר
-  const EMAILJS_PUBLIC_KEY   = 'REPLACE_PUBLIC_KEY';
-  const EMAILJS_SERVICE_ID   = 'REPLACE_SERVICE_ID';
-  const EMAILJS_TEMPLATE_ID  = 'REPLACE_TEMPLATE_ID';
-  // ── משתמשים ─────────────────────────────────────────────────
-  const USERS = {
-    'אור':    { password: '1234', email: 'finance@tal-asaf.com' },
-    'ערן':    { password: '1234', email: 'eran@tal-asaf.com'    },
-    'איילת':  { password: '1234', email: 'office@tal-asaf.com'  }
-  };
-  // ────────────────────────────────────────────────────────────
-  const KEY = 'ta_auth_v1';
-  let _otp = '', _otpUser = '', _otpExpiry = 0, _otpAttempts = 0;
-
-  emailjs.init(EMAILJS_PUBLIC_KEY);
-
-  function showErr(id, msg){ const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
-  function hideErr(id){ document.getElementById(id).style.display='none'; }
-
-  window.__doLogin = function(){
-    const u = document.getElementById('lU').value.trim();
-    const p = document.getElementById('lP').value;
-    hideErr('lErr');
-    const user = USERS[u] || USERS[u.toLowerCase && Object.keys(USERS).find(k=>k.toLowerCase()===u.toLowerCase())];
-    if(!user || user.password !== p){
-      showErr('lErr','שם משתמש או סיסמא שגויים');
-      document.getElementById('lP').value=''; document.getElementById('lP').focus(); return;
-    }
-    // מעקף זמני — ללא אימות
-    if(typeof SKIP_2FA !== 'undefined' && SKIP_2FA){
-      sessionStorage.setItem(KEY,'ok');
-      document.getElementById('loginScreen').style.display='none';
-      document.getElementById('app').style.display='block';
-      return;
-    }
-    // generate OTP
-    _otp = String(Math.floor(1000+Math.random()*9000));
-    _otpUser = u;
-    _otpExpiry = Date.now() + 5*60*1000; // 5 דקות
-    _otpAttempts = 0;
-    // send email
-    const btn = document.querySelector('.btn-login');
-    btn.textContent = 'שולח קוד...'; btn.disabled = true;
-    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email: user.email,
-      user_name: u,
-      otp_code:  _otp
-    }).then(function(){
-      btn.textContent='כניסה למערכת'; btn.disabled=false;
-      document.getElementById('loginStep1').style.display='none';
-      document.getElementById('loginStep2').style.display='block';
-      document.getElementById('otpInfo').textContent='נשלח קוד ל-'+user.email;
-      document.getElementById('lOtp').focus();
-    }, function(err){
-      btn.textContent='כניסה למערכת'; btn.disabled=false;
-      showErr('lErr','שגיאה בשליחת המייל. בדוק חיבור ונסה שוב.');
-      console.error(err);
-    });
-  };
-
-  window.__verifyOtp = function(){
-    hideErr('otpErr');
-    if(Date.now() > _otpExpiry){ showErr('otpErr','הקוד פג תוקף. התחל מחדש.'); return; }
-    const entered = document.getElementById('lOtp').value.trim();
-    if(entered === _otp){
-      _otp=''; _otpUser=''; _otpExpiry=0;
+  const USERS={'אור':'1234','ערן':'1234','איילת':'1234'};
+  const KEY='ta_auth_v1';
+  window.__doLogin=function(){
+    const u=document.getElementById('lU').value.trim();
+    const p=document.getElementById('lP').value;
+    const ok=USERS[u]!==undefined&&USERS[u]===p;
+    if(ok){
       sessionStorage.setItem(KEY,'ok');
       document.getElementById('loginScreen').style.display='none';
       document.getElementById('app').style.display='block';
     } else {
-      _otpAttempts++;
-      document.getElementById('lOtp').value='';
-      if(_otpAttempts>=3){ showErr('otpErr','יותר מדי ניסיונות. התחל מחדש.'); setTimeout(()=>location.reload(),2000); return; }
-      showErr('otpErr','קוד שגוי. נותרו '+( 3-_otpAttempts)+' ניסיונות.');
+      const el=document.getElementById('lErr');
+      el.textContent='שם משתמש או סיסמא שגויים';
+      el.style.display='block';
+      document.getElementById('lP').value='';
+      document.getElementById('lP').focus();
     }
   };
-
-  window.__backToStep1 = function(){
-    _otp=''; _otpUser=''; _otpExpiry=0;
-    document.getElementById('loginStep2').style.display='none';
-    document.getElementById('loginStep1').style.display='block';
-    document.getElementById('lU').value=''; document.getElementById('lP').value='';
-    hideErr('lErr'); hideErr('otpErr');
-  };
-
   window.__logout=function(){sessionStorage.removeItem(KEY);location.reload();};
-
   document.addEventListener('DOMContentLoaded',function(){
     document.getElementById('lP').addEventListener('keydown',function(e){if(e.key==='Enter')window.__doLogin();});
     document.getElementById('lU').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('lP').focus();});
-    document.getElementById('lOtp').addEventListener('keydown',function(e){if(e.key==='Enter')window.__verifyOtp();});
     if(sessionStorage.getItem(KEY)!=='ok'){
       document.getElementById('loginScreen').style.display='flex';
       document.getElementById('app').style.display='none';
@@ -281,39 +210,16 @@ td.cs-count{text-align:center;color:var(--gray-dark);}
 </head>
 <body>
 
-<div id="loginScreen" style="display:flex;">
-  <div class="login-box">
-    <div class="login-logo-wrap" style="display:flex;align-items:center;justify-content:center;gap:18px;">
-      <img src="logo.png" alt="טל אסף" style="max-height:70px;max-width:140px;object-fit:contain;" onerror="this.style.display='none';document.getElementById('loginLogoFallback').style.display='block'"/>
-      <div id="loginLogoFallback" style="display:none;font-size:28px;font-weight:800;color:var(--gray-dark);letter-spacing:-1px;">טל <span style="color:var(--orange)">אסף</span></div>
-      <div style="width:1px;height:50px;background:var(--border);"></div>
-      <img src="precise_logo.png" alt="Precise" style="max-height:50px;max-width:110px;object-fit:contain;"/>
-    </div>
-    <div class="login-divider"></div>
-    <h2>ברוך הבא</h2>
-    <p class="login-sub">התחבר כדי להמשיך לדשבורד</p>
-    <!-- שלב 1: שם משתמש + סיסמא -->
-    <div id="loginStep1">
-      <div id="lErr" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:13px;color:#dc2626;margin-bottom:12px;"></div>
-      <div class="login-field"><label>שם משתמש</label><input id="lU" type="text" autocomplete="username" placeholder="הכנס שם משתמש"/></div>
-      <div class="login-field"><label>סיסמא</label><input id="lP" type="password" autocomplete="current-password" placeholder="הכנס סיסמא"/></div>
-      <button class="btn-login" onclick="__doLogin()">כניסה למערכת</button>
-    </div>
-    <!-- שלב 2: קוד אימות -->
-    <div id="loginStep2" style="display:none;">
-      <div style="text-align:center;margin-bottom:20px;">
-        <div style="font-size:36px;margin-bottom:10px;">📧</div>
-        <p style="font-size:14px;font-weight:600;color:var(--gray-dark);margin-bottom:6px;">קוד אימות נשלח</p>
-        <p id="otpInfo" style="font-size:12px;color:var(--gray-mid);"></p>
+    <div id="loginScreen" style="display:none;position:fixed;inset:0;background:#1a1a2e;z-index:9999;display:flex;align-items:center;justify-content:center;">
+      <div style="background:#16213e;padding:40px;border-radius:12px;width:320px;text-align:center;direction:rtl;">
+        <div style="font-size:24px;font-weight:700;color:#e2e8f0;margin-bottom:8px;">טל אסף</div>
+        <div style="font-size:13px;color:#94a3b8;margin-bottom:28px;">ניהול ותכנון פרויקטים</div>
+        <input id="lU" type="text" placeholder="שם משתמש" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#0f3460;color:#e2e8f0;font-size:15px;margin-bottom:12px;box-sizing:border-box;text-align:right;" autocomplete="username">
+        <input id="lP" type="password" placeholder="סיסמא" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#0f3460;color:#e2e8f0;font-size:15px;margin-bottom:16px;box-sizing:border-box;text-align:right;" autocomplete="current-password">
+        <div id="lErr" style="display:none;color:#f87171;font-size:13px;margin-bottom:12px;"></div>
+        <button onclick="__doLogin()" style="width:100%;padding:11px;border-radius:8px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;">כניסה</button>
       </div>
-      <div id="otpErr" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:13px;color:#dc2626;margin-bottom:12px;"></div>
-      <div class="login-field"><label>קוד אימות (4 ספרות)</label><input id="lOtp" type="text" inputmode="numeric" maxlength="4" placeholder="הכנס את הקוד שקיבלת" style="text-align:center;font-size:22px;letter-spacing:8px;"/></div>
-      <button class="btn-login" onclick="__verifyOtp()">אימות וכניסה</button>
-      <button onclick="__backToStep1()" style="width:100%;background:none;border:none;color:var(--gray-mid);font-size:12px;cursor:pointer;margin-top:10px;font-family:inherit;">חזרה &rsaquo;</button>
     </div>
-    <p class="login-footer" style="margin-top:16px;">טל אסף ניהול ותכנון פרויקטים בע&quot;מ</p>
-  </div>
-</div>
 
 <!-- Record detail modal -->
 <div id="recModal" onclick="if(event.target===this)closeRec()">
