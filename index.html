@@ -10,6 +10,7 @@
 <script>
 (function(){
   // ── הגדרות EmailJS ──────────────────────────────────────────
+  const SKIP_2FA = true; // הסר כשEmailJS מוגדר
   const EMAILJS_PUBLIC_KEY   = 'REPLACE_PUBLIC_KEY';
   const EMAILJS_SERVICE_ID   = 'REPLACE_SERVICE_ID';
   const EMAILJS_TEMPLATE_ID  = 'REPLACE_TEMPLATE_ID';
@@ -36,6 +37,13 @@
     if(!user || user.password !== p){
       showErr('lErr','שם משתמש או סיסמא שגויים');
       document.getElementById('lP').value=''; document.getElementById('lP').focus(); return;
+    }
+    // מעקף זמני — ללא אימות
+    if(typeof SKIP_2FA !== 'undefined' && SKIP_2FA){
+      sessionStorage.setItem(KEY,'ok');
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('app').style.display='block';
+      return;
     }
     // generate OTP
     _otp = String(Math.floor(1000+Math.random()*9000));
