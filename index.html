@@ -365,7 +365,7 @@ td.cs-count{text-align:center;color:var(--gray-dark);}
       <div id="mobileList" class="rec-list"></div>
       <table>
         <thead><tr>
-          <th>תאריך</th><th>סוג מסמך</th><th>מס' מסמך</th><th>לקוח</th><th>שם פרויקט</th><th>מס' חשבון</th><th style="text-align:left;">סכום ₪</th><th>הערות</th>
+          <th onclick="toggleSort('date')" style="cursor:pointer;" id="thDate">תאריך <span id="sortDate"></span></th><th>סוג מסמך</th><th>מס' מסמך</th><th>לקוח</th><th>שם פרויקט</th><th>מס' חשבון</th><th onclick="toggleSort('amount')" style="cursor:pointer;text-align:left;" id="thAmount">סכום ₪ <span id="sortAmount"></span></th><th>הערות</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -623,6 +623,12 @@ function renderTable(){
 }
 
 window.gp=function(p){currentPage=p;renderTable();window.scrollTo(0,400);};
+window._sortField='date';window._sortDir='asc';
+window.toggleSort=function(field){
+  if(window._sortField===field){window._sortDir=window._sortDir==='asc'?'desc':'asc';}
+  else{window._sortField=field;window._sortDir=field==='amount'?'desc':'asc';}
+  applyFilters();
+};
 
 window.openRec=function(idx){
   const r=filtered[idx];
@@ -705,10 +711,14 @@ function applyFilters(){
     const fd=!dt||r.docType===dt;
     return fy&&fm&&fs&&fd;
   });
-  filtered.sort((a,b)=>{
-    const pd=s=>{const[d,m,y]=(s||'').split('/');return y&&m&&d?+y*10000+ +m*100+ +d:0;};
-    return pd(a.date)-pd(b.date);
-  });
+  const pd=s=>{const[d,m,y]=(s||'').split('/');return y&&m&&d?+y*10000+ +m*100+ +d:0;};
+  if(window._sortField==='amount'){
+    filtered.sort((a,b)=>window._sortDir==='asc'?a.amount-b.amount:b.amount-a.amount);
+  } else {
+    filtered.sort((a,b)=>pd(a.date)-pd(b.date));
+  }
+  document.getElementById('sortDate').textContent=window._sortField==='date'?(window._sortDir==='asc'?'▲':'▼'):'';
+  document.getElementById('sortAmount').textContent=window._sortField==='amount'?(window._sortDir==='asc'?'▲':'▼'):'▼▲';
   currentPage=1;
   updateSummary(filtered);
   updateCharts(filtered);
