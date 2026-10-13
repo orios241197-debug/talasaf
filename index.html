@@ -6,34 +6,89 @@
 <title>דשבורד תקבולים | טל אסף</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
 (function(){
-  const USERS={'אור':'1234','ערן':'1234','איילת':'1234'};
-  const KEY='ta_auth_v1';
-  window.__doLogin=function(){
-    const u=document.getElementById('lU').value.trim();
-    const p=document.getElementById('lP').value;
-    const ok=USERS[u]!==undefined&&USERS[u]===p;
-    if(ok){
-      sessionStorage.setItem(KEY,'ok');
-      document.getElementById('loginScreen').style.display='none';
-      document.getElementById('app').style.display='block';
-    } else {
-      const el=document.getElementById('lErr');
-      el.textContent='שם משתמש או סיסמא שגויים';
-      el.style.display='block';
+  // ── הגדרות EmailJS ──
+  const EMAILJS_PUBLIC_KEY   = 'REPLACE_PUBLIC_KEY';
+  const EMAILJS_SERVICE_ID   = 'REPLACE_SERVICE_ID';
+  const EMAILJS_TEMPLATE_ID  = 'REPLACE_TEMPLATE_ID';
+
+  // ── משתמשים מורשים ──
+  const USERS = {
+    'אור':    { password:'1234', email:'finance@tal-asaf.com' },
+    'ערן':    { password:'1234', email:'eran@tal-asaf.com'    },
+    'אוריין': { password:'1234', email:'accounts@tal-asaf.com'},
+    'איילת':  { password:'1234', email:'office@tal-asaf.com'  }
+  };
+
+  const KEY = 'ta_auth_v1';
+  let _otp='', _otpUser='', _otpExpiry=0;
+
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  function showErr(msg){ const e=document.getElementById('lErr'); e.textContent=msg; e.style.display='block'; }
+  function hideErr(){ document.getElementById('lErr').style.display='none'; }
+  function showStep(n){ document.getElementById('loginStep1').style.display=n===1?'block':'none'; document.getElementById('loginStep2').style.display=n===2?'block':'none'; }
+
+  // שלב 1: שם משתמש + סיסמא
+  window.__doStep1 = function(){
+    hideErr();
+    const u = document.getElementById('lU').value.trim();
+    const p = document.getElementById('lP').value;
+    const user = USERS[u];
+    if(!user || user.password !== p){
+      showErr('שם משתמש או סיסמא שגויים');
       document.getElementById('lP').value='';
       document.getElementById('lP').focus();
+      return;
     }
+    // יצירת OTP
+    _otp = String(Math.floor(100000 + Math.random()*900000));
+    _otpUser = u;
+    _otpExpiry = Date.now() + 5*60*1000; // 5 דקות
+
+    const maskedEmail = user.email.replace(/(.{2}).+(@.+)/, '$1***$2');
+    document.getElementById('lOtpInfo').textContent = 'קוד נשלח אל ' + maskedEmail;
+    document.getElementById('lOtpInput').value = '';
+
+    // שליחת מייל
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: user.email,
+      to_name:  u,
+      otp_code: _otp
+    }).then(function(){
+      showStep(2);
+      document.getElementById('lOtpInput').focus();
+    }).catch(function(err){
+      console.error('EmailJS error:', err);
+      showErr('שגיאה בשליחת המייל. בדוק חיבור ונסה שוב.');
+    });
   };
-  window.__logout=function(){sessionStorage.removeItem(KEY);location.reload();};
-  document.addEventListener('DOMContentLoaded',function(){
-    document.getElementById('lP').addEventListener('keydown',function(e){if(e.key==='Enter')window.__doLogin();});
-    document.getElementById('lU').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('lP').focus();});
+
+  // שלב 2: אימות OTP
+  window.__doStep2 = function(){
+    hideErr();
+    const code = document.getElementById('lOtpInput').value.trim();
+    if(Date.now() > _otpExpiry){ showErr('הקוד פג תוקף. חזור להתחלה.'); return; }
+    if(code !== _otp){ showErr('קוד שגוי. נסה שוב.'); document.getElementById('lOtpInput').value=''; document.getElementById('lOtpInput').focus(); return; }
+    sessionStorage.setItem(KEY,'ok');
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+  };
+
+  window.__backToStep1 = function(){ hideErr(); showStep(1); };
+  window.__logout = function(){ sessionStorage.removeItem(KEY); location.reload(); };
+
+  document.addEventListener('DOMContentLoaded', function(){
+    document.getElementById('lP').addEventListener('keydown', function(e){ if(e.key==='Enter') window.__doStep1(); });
+    document.getElementById('lU').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('lP').focus(); });
+    document.getElementById('lOtpInput').addEventListener('keydown', function(e){ if(e.key==='Enter') window.__doStep2(); });
     if(sessionStorage.getItem(KEY)!=='ok'){
       document.getElementById('loginScreen').style.display='flex';
       document.getElementById('app').style.display='none';
     }
+    showStep(1);
   });
 })();
 </script>
@@ -220,16 +275,35 @@ td.cs-count{text-align:center;color:var(--gray-dark);}
         <div class="login-divider"></div>
         <h2>טל אסף</h2>
         <p class="login-sub">ניהול ותכנון פרויקטים בע"מ</p>
-        <div class="login-field">
-          <label for="lU">שם משתמש</label>
-          <input id="lU" type="text" placeholder="הכנס שם משתמש" autocomplete="username">
+
+        <!-- שלב 1: שם משתמש + סיסמא -->
+        <div id="loginStep1">
+          <div class="login-field">
+            <label for="lU">שם משתמש</label>
+            <input id="lU" type="text" placeholder="הכנס שם משתמש" autocomplete="username">
+          </div>
+          <div class="login-field">
+            <label for="lP">סיסמא</label>
+            <input id="lP" type="password" placeholder="הכנס סיסמא" autocomplete="current-password">
+          </div>
+          <button class="btn-login" onclick="__doStep1()">המשך ←</button>
         </div>
-        <div class="login-field">
-          <label for="lP">סיסמא</label>
-          <input id="lP" type="password" placeholder="הכנס סיסמא" autocomplete="current-password">
+
+        <!-- שלב 2: קוד OTP -->
+        <div id="loginStep2" style="display:none;">
+          <div style="text-align:center;margin-bottom:18px;">
+            <div style="font-size:36px;margin-bottom:8px;">📧</div>
+            <p id="lOtpInfo" style="font-size:13px;color:#6b7280;"></p>
+            <p style="font-size:12px;color:#9ca3af;margin-top:4px;">הקוד תקף ל-5 דקות</p>
+          </div>
+          <div class="login-field">
+            <label for="lOtpInput">קוד אימות</label>
+            <input id="lOtpInput" type="text" inputmode="numeric" maxlength="6" placeholder="הכנס קוד 6 ספרות" style="letter-spacing:6px;font-size:20px;text-align:center;">
+          </div>
+          <button class="btn-login" onclick="__doStep2()">כניסה</button>
+          <button onclick="__backToStep1()" style="width:100%;background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;margin-top:10px;font-family:inherit;">← חזרה</button>
         </div>
-        <div id="lErr"></div>
-        <button class="btn-login" onclick="__doLogin()">כניסה</button>
+
         <div class="login-footer">© Precise Project Management</div>
       </div>
     </div>
